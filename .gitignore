@@ -1,0 +1,28 @@
+# Secrets — never commit
+.env
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Index data (too large, regenerate with build_index)
+data/chroma/
+data/bm25_index.pkl
+data/bm25_texts.json
+
+# Test / editor artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+.DS_Store
+*.ipynb_checkpoints
