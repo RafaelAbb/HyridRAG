@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import List
 
 
 class FileLoaderInterface(ABC):
@@ -7,6 +8,14 @@ class FileLoaderInterface(ABC):
 
     @abstractmethod
     def load(self, file_path: str) -> list:
+        pass
+
+
+class ChunckerInterface(ABC):
+    '''interface for file chunkers.'''
+
+    @abstractmethod
+    def chunk(self, raw_document: RawDocument) -> List[Chunk]:
         pass
 
 
@@ -32,3 +41,13 @@ class Source:
         self.page_count = page_count
         self.section = section
         self.author = author
+
+
+class Chunk:
+    '''Class model for a chunk of a raw document.'''
+    def __init__(self, content: str, metadata: 'DocumentMetadata' = None, chunk_id: str = None, chunk_strategy: str = None):
+        self.chunk_id = chunk_id
+        self.metadata = metadata
+        self.chunk_strategy = chunk_strategy
+        self.content = content
+        
