@@ -1,16 +1,9 @@
-from enum import Enum
 from typing import List
 
-from src.ingestion.base import ChunckerInterface, RawDocument
+from src.ingestion.base import ChunckerInterface, RawDocument, ChunkingStrategy
 from src.ingestion.chunckers.fixed import FixedChuncker
 from src.ingestion.chunckers.recursive import RecursiveChuncker
 from src.ingestion.chunckers.semantic import SemanticChuncker
-
-
-class ChunkingStrategy(Enum):
-    FIXED = 1
-    RECURSIVE = 2
-    SEMANTIC = 3
 
 
 def GetChuncker(strategy: ChunkingStrategy) -> ChunckerInterface:

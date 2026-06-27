@@ -1,8 +1,13 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
+from enum import Enum
 from typing import List
 
-from src.ingestion.chuncker import ChunkingStrategy
+
+class ChunkingStrategy(Enum):
+    FIXED = 1
+    RECURSIVE = 2
+    SEMANTIC = 3
 
 
 class FileLoaderInterface(ABC):
