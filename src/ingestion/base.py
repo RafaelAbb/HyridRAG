@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List
 
+from src.ingestion.chuncker import ChunkingStrategy
+
 
 class FileLoaderInterface(ABC):
     '''interface for file loaders.'''
@@ -45,7 +47,7 @@ class Source:
 
 class Chunk:
     '''Class model for a chunk of a raw document.'''
-    def __init__(self, content: str, metadata: 'DocumentMetadata' = None, chunk_id: str = None, chunk_strategy: str = None):
+    def __init__(self, content: str, metadata: 'DocumentMetadata' = None, chunk_id: int = None, chunk_strategy: ChunkingStrategy = None):
         self.chunk_id = chunk_id
         self.metadata = metadata
         self.chunk_strategy = chunk_strategy

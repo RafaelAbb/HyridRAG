@@ -13,7 +13,6 @@ class ChunkingStrategy(Enum):
     SEMANTIC = 3
 
 
-
 def GetChuncker(strategy: ChunkingStrategy) -> ChunckerInterface:
    
     match strategy:
@@ -21,8 +20,6 @@ def GetChuncker(strategy: ChunkingStrategy) -> ChunckerInterface:
         case ChunkingStrategy.RECURSIVE: return RecursiveChuncker()
         case ChunkingStrategy.SEMANTIC: return SemanticChuncker()
  
-
-
 
 def chunk_document(docs = RawDocument, strategy=ChunkingStrategy):
 
