@@ -1,0 +1,4 @@
+Hello world.
+This is a sample text file.
+It has multiple lines of content.
+Used for testing the TextLoader.

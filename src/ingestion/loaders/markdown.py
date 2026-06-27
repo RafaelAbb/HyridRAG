@@ -12,7 +12,7 @@ class MarkdownLoader(FileLoaderInterface):
             content = file.read()
             mod_time = get_mod_time(file_path)
 
-            parts = re.split(r'((?m)^#{1,3} )', content)
+            parts = re.split(r'(?m)(^#{1,3} )', content)
             raw_documents = []
 
             for i in range(1, len(parts) - 1, 2):

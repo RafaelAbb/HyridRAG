@@ -42,10 +42,10 @@ class DocumentMetadata:
 
 class Source:
     '''Class model for a source of raw documents.'''
-    def __init__(self, source_name: str, author: str = None, description: str = None, page_count: int = None, section: str = None):
+    def __init__(self, source_name: str, author: str = None, description: str = None, page_number: int = None, section: str = None):
         self.source_name = source_name
         self.description = description
-        self.page_count = page_count
+        self.page_number = page_number
         self.section = section
         self.author = author
 
