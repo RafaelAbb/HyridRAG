@@ -146,7 +146,7 @@ confirm it matches your chunk count. The index persists across a Python restart.
 * [x] `loader.py` handles PDF/MD/HTML/TXT into a uniform `RawDocument`, metadata preserved
 * [x] `chunker.py` implements all three strategies, each chunk tagged with its strategy
 * [x] `embedder.py` embeds in batches, writes to ChromaDB + BM25, dedups, is idempotent
-* [ ] You can go from a folder of docs to a populated, persistent index
+* [x] You can go from a folder of docs to a populated, persistent index
 * [x] A test or two in `tests/test_chunker.py` (🛡️ start the testing habit now)
 
 **The vertical-slice milestone:** by end of Lesson 2 you have searchable data. Lesson 3 makes

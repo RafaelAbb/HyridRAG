@@ -21,11 +21,12 @@ class Embedder:
 
     def generate_id(self, chunk: Chunk) -> str:
 
-        source = chunk.metadata.source.source_name if chunk.metadata and chunk.metadata.source else "unknown"
+        source_name = chunk.metadata.source.source_name if chunk.metadata and chunk.metadata.source else "unknown"
         strategy = chunk.chunk_strategy.name if chunk.chunk_strategy else "unknown"
-        page = chunk.metadata.page if chunk.metadata and chunk.metadata.page is not None else "unknown"
-        section = chunk.metadata.section if chunk.metadata and chunk.metadata.section is not None else "unknown"
-        return f"{source}_{page}_{section}_{chunk.chunk_id}_{strategy}"
+        src = chunk.metadata.source if chunk.metadata else None
+        page = src.page_number if src and src.page_number is not None else "unknown"
+        section = src.section if src and src.section is not None else "unknown"
+        return f"{source_name}_{page}_{section}_{chunk.chunk_id}_{strategy}"
 
 
     def embed(self, chunks: List[Chunk], batch_size: int = None) -> None:
