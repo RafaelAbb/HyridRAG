@@ -1,10 +1,10 @@
 import re
+from typing import Iterator
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import sklearn
-from src.ingestion.base import ChunckerInterface, Chunk
-from src.ingestion.chuncker import ChunkingStrategy
+from src.ingestion.base import ChunckerInterface, Chunk, ChunkingStrategy
 
 TRANSOFRMER_MODEL = "all-MiniLM-L6-v2"
 THRESHOLD_PERCENTILE = 25  # Adjust this value based on your needs
@@ -16,10 +16,15 @@ class SemanticChuncker(ChunckerInterface):
         self.model = SentenceTransformer(model_name)
     
     
-    def chunk(self, doc, threshold=THRESHOLD_PERCENTILE) -> list[Chunk]:
+    def chunk(self, doc, threshold=THRESHOLD_PERCENTILE) -> Iterator[Chunk]:
 
         metadata  = doc.metadata
         sentences = re.split(r'(?<=[.!?])\s+', doc.content)
+        
+        if len(sentences) <= 1:
+            yield Chunk(content=doc.content, metadata=metadata, chunk_id=0, chunk_strategy=ChunkingStrategy.SEMANTIC)
+            return
+            
         
         embeddings = self.model.encode(sentences) 
 

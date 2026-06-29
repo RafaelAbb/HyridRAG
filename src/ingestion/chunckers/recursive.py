@@ -1,9 +1,8 @@
+from typing import Iterator
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from src.ingestion.base import ChunckerInterface, Chunk
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-from src.ingestion.chuncker import ChunkingStrategy
+from src.ingestion.base import ChunckerInterface, Chunk, ChunkingStrategy
 
 CHUNK_SIZE = 100
 CHUNK_OVERLAP = 0
@@ -11,7 +10,7 @@ CHUNK_OVERLAP = 0
 class RecursiveChuncker(ChunckerInterface):
     
     
-    def chunk(self, raw_document, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP) -> list[Chunk]:
+    def chunk(self, raw_document, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP) -> Iterator[Chunk]:
         
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         texts = text_splitter.split_text(raw_document.content)

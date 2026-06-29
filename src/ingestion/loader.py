@@ -1,6 +1,7 @@
 import os
 from enum import Enum
 
+from src.ingestion.base import RawDocument
 from src.ingestion.loaders.pdf import PDFLoader
 from src.ingestion.loaders.markdown import MarkdownLoader
 from src.ingestion.loaders.html import HTMLLoader
@@ -14,7 +15,7 @@ class FileExtension(Enum):
     MD = 4
 
 
-def load_file(file_name: str) -> list:
+def load_file(file_name: str) -> list[RawDocument]:
     _, extension = os.path.splitext(file_name)
     extension_name = extension.lower().lstrip('.').upper()
 
@@ -33,7 +34,7 @@ def load_file(file_name: str) -> list:
     return loader.load(file_name)
 
 
-def load_directory(directory_path: str) -> list:
+def load_directory(directory_path: str) -> list[RawDocument]:
     raw_documents = []
     for root, _, files in os.walk(directory_path):
         for file in files:

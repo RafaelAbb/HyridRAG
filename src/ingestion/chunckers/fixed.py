@@ -1,7 +1,7 @@
-from typing import List
+from typing import Iterator
 
-from src.ingestion.base import ChunckerInterface, Chunk, RawDocument
-from src.ingestion.chuncker import ChunkingStrategy
+from src.ingestion.base import ChunckerInterface, Chunk, ChunkingStrategy, RawDocument
+
 
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 64
@@ -11,7 +11,7 @@ class FixedChuncker(ChunckerInterface):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
-    def chunk(self, raw_document: RawDocument) -> List[Chunk]:
+    def chunk(self, raw_document: RawDocument) -> Iterator[Chunk]:
         metadata = raw_document.metadata
         
         for i in range(0, len(raw_document.content), self.chunk_size - self.chunk_overlap):

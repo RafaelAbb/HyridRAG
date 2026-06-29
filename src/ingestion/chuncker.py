@@ -6,7 +6,7 @@ from src.ingestion.chunckers.recursive import RecursiveChuncker
 from src.ingestion.chunckers.semantic import SemanticChuncker
 
 
-def GetChuncker(strategy: ChunkingStrategy) -> ChunckerInterface:
+def get_chuncker(strategy: ChunkingStrategy) -> ChunckerInterface:
    
     match strategy:
         case ChunkingStrategy.FIXED: return FixedChuncker()
@@ -14,19 +14,15 @@ def GetChuncker(strategy: ChunkingStrategy) -> ChunckerInterface:
         case ChunkingStrategy.SEMANTIC: return SemanticChuncker()
  
 
-def chunk_document(docs = RawDocument, strategy=ChunkingStrategy):
+def chunk_document(docs :RawDocument, strategy :ChunkingStrategy):
 
-    chuncker = GetChuncker(strategy)
+    chuncker = get_chuncker(strategy)
     return chuncker.chunk(docs)
     
-    
-    
-    
 
-
-def chunk_documents(docs = List[RawDocument], strategy=ChunkingStrategy):
+def chunk_documents(docs : List[RawDocument], strategy :ChunkingStrategy):
     chunks = []
+    chuncker = get_chuncker(strategy)
     for doc in docs:
-        chuncker = GetChuncker(strategy)
         chunks.extend(chuncker.chunk(doc))
     return chunks
