@@ -3,10 +3,10 @@ from typing import Iterator
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
-import sklearn
+from sklearn.metrics.pairwise import cosine_similarity
 from src.ingestion.base import ChunckerInterface, Chunk, ChunkingStrategy
 
-TRANSOFRMER_MODEL = "all-MiniLM-L6-v2"
+TRANSOFRMER_MODEL = "all-MiniLM-L-6-v2"
 THRESHOLD_PERCENTILE = 25  # Adjust this value based on your needs
 
 class SemanticChuncker(ChunckerInterface):
@@ -29,7 +29,7 @@ class SemanticChuncker(ChunckerInterface):
         embeddings = self.model.encode(sentences) 
 
         
-        scores = np.diag(sklearn.metrics.pairwise.cosine_similarity(embeddings[:-1], embeddings[1:]))  # Compute cosine similarity between adjacent sentences
+        scores = np.diag(cosine_similarity(embeddings[:-1], embeddings[1:]))  # Compute cosine similarity between adjacent sentences
         
         cutoff = np.percentile(scores, threshold)          # the value
         break_indices = np.where(scores < cutoff)[0]       # indices where similarity is low

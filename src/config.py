@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings
 
+from src.ingestion.base import ChunkingStrategy
+
 
 class Settings(BaseSettings):
     # LLM providers
@@ -18,6 +20,7 @@ class Settings(BaseSettings):
     dense_top_k: int = 10
     sparse_top_k: int = 10
     reranker_top_k: int = 5
+    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
     rrf_dense_weight: float = 0.7
     rrf_sparse_weight: float = 0.3
     similarity_dedup_threshold: float = 0.95
@@ -28,7 +31,7 @@ class Settings(BaseSettings):
     max_tokens: int = 1024
 
     # Chunking
-    default_chunk_strategy: str = "recursive"
+    default_chunk_strategy: ChunkingStrategy = ChunkingStrategy.RECURSIVE
     chunk_size: int = 512
     chunk_overlap: int = 64
 
