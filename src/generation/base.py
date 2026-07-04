@@ -21,7 +21,7 @@ class GenerationResult:
 class CitationVerification:
     claim: str
     doc_id: str
-    is_supported: bool
+    is_supported: JudgeEnum
     
     
 class JudgeEnum(Enum):

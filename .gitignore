@@ -18,9 +18,6 @@ data/chroma/
 data/bm25_index.pkl
 data/bm25_texts.json
 
-# Lesson guides — read only, no need to track changes
-exercises/
-
 # Test / editor artifacts
 .pytest_cache/
 .mypy_cache/
@@ -29,3 +26,5 @@ exercises/
 dist/
 .DS_Store
 *.ipynb_checkpoints
+
+exercises/
