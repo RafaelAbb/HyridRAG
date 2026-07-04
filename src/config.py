@@ -28,8 +28,12 @@ class Settings(BaseSettings):
     # Generation
     generation_model: str = "gpt-4o"
     generation_temperature: float = 0.0
-    max_tokens: int = 1024
-
+    generation_max_tokens: int = 1024
+    
+    judgement_model: str = "gpt-4o-mini"
+    judgement_temperature: float = 0.0
+    judgement_max_tokens: int = 1024
+    
     # Chunking
     default_chunk_strategy: ChunkingStrategy = ChunkingStrategy.RECURSIVE
     chunk_size: int = 512
