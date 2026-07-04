@@ -1,9 +1,10 @@
+import logging
 from src.config import settings
 from openai import OpenAI
 
 from src.retrieval.base import RetrievalResult
 
-from src.generation.base import GenerationResult, JudgeEnum
+from src.generation.base import CitationVerification, GenerationResult, JudgeEnum
 import json
 
 
@@ -116,13 +117,13 @@ def generate_answer(query: str,
     return parsed_result
 
 
-def judge_one_citation(claim_source: tuple[str, str], chunk_text: str, openai_client: OpenAI = None) -> bool:
+def judge_one_citation(claim_source: tuple[str, str], chunk_text: str, openai_client: OpenAI = None) -> JudgeEnum:
     # one cheap LLM call, returns True/False
-    openai = openai_client or OpenAI(api_key=settings.openai_api_key)
+    openai_client = openai_client or OpenAI(api_key=settings.openai_api_key)
     claim, source = claim_source
     
     
-    completion = openai.chat.completions.create(
+    completion = openai_client.chat.completions.create(
                 model=settings.judgement_model,
                 temperature=settings.judgement_temperature,
                 max_tokens=settings.judgement_max_tokens,
@@ -131,6 +132,22 @@ def judge_one_citation(claim_source: tuple[str, str], chunk_text: str, openai_cl
                 {"role": "user", "content":  f"CONTEXT:\n{chunk_text}\n\nCLAIM: {claim}"}
                 ]
     )
-    
-    return completion.choices[0].message.content.strip().lower() == JudgeEnum.SUPPORTED.value
+    judgment = completion.choices[0].message.content.strip().lower()
+    try:
+        judge_result = JudgeEnum(judgment)
+    except Exception as e:
+        logging.error(f"Error parsing judge result: {e}. Response was: {judgment}, claim: {claim}, source: {source}")
+        judge_result = JudgeEnum.INSUFFICIENT_INFO  # Default to insufficient info on error
+    return judge_result 
 
+
+def judge_citations(claim_source_pairs: list[tuple[str, str]], retrieved_results: list[RetrievalResult], openai_client: OpenAI = None) -> list[CitationVerification]:
+
+    openai_client = openai_client or OpenAI(api_key=settings.openai_api_key)
+    id_dict = {result.doc_id: result.text for result in retrieved_results}
+    citation_verifications = []
+    
+    for claim, source in claim_source_pairs:
+        if source not in id_dict:
+            raise ValueError(f"Source {source} not found in retrieved results.")
+        
