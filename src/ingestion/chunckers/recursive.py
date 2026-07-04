@@ -10,7 +10,9 @@ CHUNK_OVERLAP = 0
 class RecursiveChuncker(ChunckerInterface):
     
     
-    def chunk(self, raw_document, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP) -> Iterator[Chunk]:
+    def chunk(self, raw_document,
+              chunk_size=CHUNK_SIZE,
+              chunk_overlap=CHUNK_OVERLAP) -> Iterator[Chunk]:
         
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         texts = text_splitter.split_text(raw_document.content)
