@@ -149,5 +149,14 @@ def judge_citations(claim_source_pairs: list[tuple[str, str]], retrieved_results
     
     for claim, source in claim_source_pairs:
         if source not in id_dict:
-            raise ValueError(f"Source {source} not found in retrieved results.")
-        
+            logging.error(f"Source {source} not found in retrieved results.")
+        else:
+            judge_result = judge_one_citation((claim, source), id_dict[source], openai_client)
+            citation_verifications.append(
+                CitationVerification(
+                    claim=claim,
+                    doc_id=source,
+                    is_supported=judge_result == JudgeEnum.SUPPORTED,
+                )
+            )
+    return citation_verifications
