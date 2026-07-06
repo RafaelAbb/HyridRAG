@@ -1,14 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 from typing import Iterator, List
 
-
-class ChunkingStrategy(str, Enum):
-    FIXED = "fixed"
-    RECURSIVE = "recursive"
-    SEMANTIC = "semantic"
+from src.config import ChunkingStrategy
 
 
 class FileLoaderInterface(ABC):

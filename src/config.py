@@ -1,12 +1,19 @@
+from enum import Enum
+
 from pydantic_settings import BaseSettings
 
-from src.ingestion.base import ChunkingStrategy
+
+class ChunkingStrategy(str, Enum):
+    FIXED = "fixed"
+    RECURSIVE = "recursive"
+    SEMANTIC = "semantic"
 
 
 class Settings(BaseSettings):
     # LLM providers
     openai_api_key: str
     anthropic_api_key: str = ""
+    evaluation_api_key: str = ""
 
     # Embedding
     embedding_model: str = "text-embedding-3-small"

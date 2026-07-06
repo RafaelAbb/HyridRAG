@@ -103,6 +103,7 @@ def generate_answer(query: str,
                 model=settings.generation_model,
                 temperature=settings.generation_temperature,
                 max_tokens=settings.generation_max_tokens,
+                response_format={"type": "json_object"},
                 messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content":  f"CONTEXT:\n{context_block}\n\nQUESTION: {query}"}
