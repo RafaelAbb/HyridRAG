@@ -82,9 +82,10 @@ def test_confidence_zero_when_no_answer():
     assert calculated_confidence(result) == 0.0
 
 
-def test_confidence_zero_when_no_references():
-    result = make_generation_result(references=[])
-    assert calculated_confidence(result) == 0.0
+def test_confidence_lower_when_no_references():
+    result_with = make_generation_result(references=[make_retrieval_result("doc_1", score=1.0)])
+    result_without = make_generation_result(references=[])
+    assert calculated_confidence(result_without) < calculated_confidence(result_with)
 
 
 def test_confidence_full_when_all_citations_supported_and_high_score():

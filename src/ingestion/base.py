@@ -5,10 +5,10 @@ from enum import Enum
 from typing import Iterator, List
 
 
-class ChunkingStrategy(Enum):
-    FIXED = 1
-    RECURSIVE = 2
-    SEMANTIC = 3
+class ChunkingStrategy(str, Enum):
+    FIXED = "fixed"
+    RECURSIVE = "recursive"
+    SEMANTIC = "semantic"
 
 
 class FileLoaderInterface(ABC):
