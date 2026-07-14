@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     # LLM providers
     openai_api_key: str
     anthropic_api_key: str = ""
-    evaluation_api_key: str = ""
+    hf_token: str = ""
 
     # Embedding
     embedding_model: str = "text-embedding-3-small"
