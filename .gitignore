@@ -27,4 +27,11 @@ dist/
 .DS_Store
 *.ipynb_checkpoints
 
+# DeepEval local cache/config
+.deepeval/
+
+# Eval run artifacts (regenerate by running the eval suite)
+evals/experiments/
+evals/logs/
+
 exercises/
