@@ -145,18 +145,23 @@ def judge_one_citation(claim_source: tuple[str, str], chunk_text: str, openai_cl
 def judge_citations(claim_source_pairs: list[tuple[str, str]], retrieved_results: list[RetrievalResult], openai_client: OpenAI = None) -> list[CitationVerification]:
 
     openai_client = openai_client or OpenAI(api_key=settings.openai_api_key)
-    id_dict = {result.doc_id: result.text for result in retrieved_results}
+    # generate_answer's context_block is numbered "[1] ... [2] ..." (1-based position,
+    # not doc_id) and SYSTEM_PROMPT tells the model to cite that number — so citations
+    # must be resolved by position in retrieved_results, not by doc_id.
+    index_dict = {str(i): result for i, result in enumerate(retrieved_results, start=1)}
     citation_verifications = []
-    
+
     for claim, source in claim_source_pairs:
-        if source not in id_dict:
+        source = str(source)
+        if source not in index_dict:
             logging.error(f"Source {source} not found in retrieved results.")
         else:
-            judge_result = judge_one_citation((claim, source), id_dict[source], openai_client)
+            result = index_dict[source]
+            judge_result = judge_one_citation((claim, source), result.text, openai_client)
             citation_verifications.append(
                 CitationVerification(
                     claim=claim,
-                    doc_id=source,
+                    doc_id=result.doc_id,
                     is_supported=judge_result == JudgeEnum.SUPPORTED,
                 )
             )

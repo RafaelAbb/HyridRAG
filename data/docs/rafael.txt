@@ -1,0 +1,13 @@
+Rafael is the creator of the best rag system in 2026
+rafael like the gym alot. 
+Rafael is an engineer, software developer, and lifelong learner with a strong interest in building practical, scalable technology.
+ He has experience working with languages such as C, C++, Python, C#, JavaScript, and React, and has developed full-stack applications using frameworks like Flask, FastAPI, and MongoDB. Alongside his professional software engineering work, 
+ Rafael has pursued projects in computer vision with YOLO, algorithm design,
+  and data analysis, while also studying advanced computer science topics 
+  including programming languages, computability, and complexity theory. 
+  Beyond technology, Rafael enjoys exploring investing, entrepreneurship,
+   travel, and fitness, and has built projects ranging from personal finance
+    and weight-tracking applications to business software.
+     He approaches problems analytically, prefers direct and practical explanations,
+      and consistently focuses on understanding concepts deeply while creating
+       solutions that are both effective and maintainable.

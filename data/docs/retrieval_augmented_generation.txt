@@ -1,0 +1,15 @@
+Retrieval Augmented Generation (RAG) is a technique that combines information retrieval with language model generation. It was introduced by Lewis et al. in the 2020 paper "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks."
+
+The core idea of RAG is to ground LLM outputs in external knowledge. Instead of relying solely on knowledge encoded in model weights during training, RAG retrieves relevant documents at inference time and conditions the generation on those documents. This reduces hallucinations and allows the system to answer questions about documents the model was never trained on.
+
+A RAG pipeline has two main stages. In the indexing stage, documents are split into chunks, embedded into dense vectors, and stored in a vector database. In the query stage, the user query is embedded, the most similar chunks are retrieved, and those chunks are passed to the LLM as context alongside the query.
+
+Dense retrieval uses neural embeddings to find semantically similar documents. The query and documents are embedded into the same vector space, and similarity is measured by cosine similarity or dot product. Models like OpenAI's text-embedding-3-small or sentence-transformers produce these embeddings.
+
+Sparse retrieval uses keyword-based methods such as BM25. BM25 scores documents based on term frequency and inverse document frequency. It excels at exact keyword matches but misses semantic synonyms.
+
+Hybrid retrieval combines dense and sparse retrieval. Reciprocal Rank Fusion (RRF) is a common method to merge results from both systems by combining rank positions rather than raw scores. This avoids the problem of incomparable score scales between dense (0-1 cosine) and sparse (unbounded BM25) systems.
+
+A cross-encoder reranker is often used as a second stage after hybrid retrieval. It takes the top candidates and scores each (query, document) pair jointly, producing more accurate relevance judgments than bi-encoder models. The tradeoff is speed: cross-encoders are significantly slower but more precise.
+
+Hallucinations in RAG occur when the model generates claims not supported by the retrieved context. Citation verification using an LLM-as-judge is one technique to detect these post-generation. The judge is given a claim and the cited chunk and asked whether the chunk actually supports the claim.

@@ -1,0 +1,15 @@
+Word embeddings are dense vector representations of words or tokens in a continuous vector space. Similar words are placed close together in this space. Word2Vec, introduced by Mikolov et al. in 2013, was one of the first widely-used word embedding models. It is trained using two architectures: CBOW (Continuous Bag of Words) and Skip-gram.
+
+Sentence embeddings extend the concept to full sentences or paragraphs. Models like Sentence-BERT (SBERT) produce embeddings where semantically similar sentences have high cosine similarity. SBERT uses Siamese network training with a contrastive loss to make the embedding space meaningful for sentence pairs.
+
+OpenAI's embedding models, such as text-embedding-3-small and text-embedding-ada-002, produce high-quality sentence embeddings via API. text-embedding-3-small produces vectors of dimension 1536 and is optimized for retrieval tasks.
+
+Vector databases store and index high-dimensional embedding vectors to enable fast approximate nearest neighbor (ANN) search. Popular vector databases include ChromaDB, Pinecone, Weaviate, and Qdrant.
+
+ChromaDB is an open-source embedding database. It stores documents, their embeddings, and associated metadata. ChromaDB supports cosine similarity and Euclidean distance for retrieval. It can persist data to disk using SQLite. ChromaDB is commonly used in RAG prototypes because it requires no external infrastructure.
+
+Approximate nearest neighbor search is used instead of exact search because exact search scales linearly with the number of vectors. ANN algorithms like HNSW (Hierarchical Navigable Small World) and IVF (Inverted File Index) trade a small amount of recall for large speed gains.
+
+HNSW builds a hierarchical graph structure. Queries start at the top layer and greedily traverse to find approximate nearest neighbors. HNSW is the default index used by ChromaDB and Pinecone.
+
+The cosine similarity between two vectors is the dot product of their normalized versions. It measures the angle between them, ignoring magnitude. ChromaDB returns cosine distance (1 - cosine_similarity), so lower distance means higher similarity. RAG systems typically convert this to similarity by computing 1 - distance before displaying or thresholding scores.

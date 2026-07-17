@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     chunk_size: int = 512
     chunk_overlap: int = 64
 
+    # CORS — comma-separated origins allowed to call the API (e.g. the Vite dev server)
+    cors_origins: str = "http://localhost:5173"
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

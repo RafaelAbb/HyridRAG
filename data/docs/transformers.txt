@@ -1,0 +1,15 @@
+The Transformer is a deep learning architecture introduced in the 2017 paper "Attention Is All You Need" by Vaswani et al. It replaced recurrent neural networks (RNNs) as the dominant architecture for natural language processing tasks.
+
+The core mechanism of the Transformer is self-attention, which allows the model to weigh the importance of different tokens in a sequence relative to each other. Unlike RNNs, Transformers process all tokens in parallel, making them much faster to train on modern hardware.
+
+A Transformer consists of an encoder and a decoder. The encoder maps an input sequence to a sequence of continuous representations. The decoder then generates an output sequence from those representations, one token at a time. Each encoder and decoder layer contains a multi-head self-attention sublayer and a feed-forward sublayer.
+
+Multi-head attention runs several attention operations in parallel, each with different learned projections. This allows the model to jointly attend to information from different representation subspaces at different positions.
+
+The Transformer uses positional encodings to inject information about the position of each token, since the attention mechanism itself is permutation-invariant.
+
+BERT (Bidirectional Encoder Representations from Transformers) was introduced by Google in 2018. It uses only the encoder part of the Transformer. BERT is pre-trained on two tasks: masked language modeling (predicting randomly masked tokens) and next sentence prediction. BERT was the first model to achieve state-of-the-art results on eleven NLP benchmarks simultaneously.
+
+GPT (Generative Pre-trained Transformer) was introduced by OpenAI in 2018. It uses only the decoder part of the Transformer. GPT is trained to predict the next token in a sequence (causal language modeling). GPT-3, released in 2020, has 175 billion parameters and demonstrated strong few-shot learning capabilities.
+
+The key difference between BERT and GPT is directionality: BERT is bidirectional (sees context from both left and right), while GPT is unidirectional (sees only left context). This makes BERT better for understanding tasks and GPT better for generation tasks.

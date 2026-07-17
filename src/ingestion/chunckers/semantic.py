@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from src.ingestion.base import ChunckerInterface, Chunk, ChunkingStrategy
 
-TRANSOFRMER_MODEL = "all-MiniLM-L-6-v2"
+TRANSOFRMER_MODEL = "all-MiniLM-L6-v2"
 THRESHOLD_PERCENTILE = 25  # Adjust this value based on your needs
 
 class SemanticChuncker(ChunckerInterface):
@@ -19,8 +19,8 @@ class SemanticChuncker(ChunckerInterface):
     def chunk(self, doc, threshold=THRESHOLD_PERCENTILE) -> Iterator[Chunk]:
 
         metadata  = doc.metadata
-        sentences = re.split(r'(?<=[.!?])\s+', doc.content)
-        
+        sentences = [s for s in re.split(r'(?<=[.!?])\s+', doc.content) if s.strip()]
+
         if len(sentences) <= 1:
             yield Chunk(content=doc.content, metadata=metadata, chunk_id=0, chunk_strategy=ChunkingStrategy.SEMANTIC)
             return
