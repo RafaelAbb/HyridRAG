@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     # CORS — comma-separated origins allowed to call the API (e.g. the Vite dev server)
     cors_origins: str = "http://localhost:5173"
 
+    # Uploads (POST /ingest/upload)
+    upload_dir: str = "./data/uploads"
+    max_upload_size_mb: int = 50
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

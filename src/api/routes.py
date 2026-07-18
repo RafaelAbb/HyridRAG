@@ -1,6 +1,6 @@
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 
 from src.api.deps import get_embedder, get_reranker
 from src.api.schemas import (
@@ -11,9 +11,13 @@ from src.api.schemas import (
     IngestRequest,
     IngestResponse,
     RetrievalMode,
+    SkippedFile,
     SourceOut,
+    UploadIngestResponse,
 )
+from src.config import ChunkingStrategy, settings
 from src.ingestion import Embedder, chunk_documents, load_directory, load_file
+from src.ingestion.loader import FileExtension
 from src.retrieval.dense import dense_search
 from src.retrieval.sparse import sparse_search
 from src.retrieval.fusion import Reranker, hybrid_retrieve
@@ -97,6 +101,84 @@ def ingest(
         documents_ingested=len(raw_documents),
         chunks_created=len(chunks),
         strategy=payload.strategy,
+    )
+
+
+def _sanitize_relative_path(relative_path: str) -> str | None:
+    """Normalize an upload's relative path and guard against traversal
+    outside upload_dir. Returns None if the path is unsafe."""
+    normalized = os.path.normpath(relative_path.lstrip("/\\"))
+    if normalized.startswith("..") or os.path.isabs(normalized):
+        return None
+    return normalized
+
+
+@router.post("/ingest/upload", response_model=UploadIngestResponse)
+def ingest_upload(
+    files: list[UploadFile] = File(...),
+    relative_paths: list[str] = Form(...),
+    strategy: ChunkingStrategy = Form(default=settings.default_chunk_strategy),
+    embedder: Embedder = Depends(get_embedder),
+):
+    max_bytes = settings.max_upload_size_mb * 1024 * 1024
+    supported_extensions = {e.name for e in FileExtension}
+
+    saved_paths: list[str] = []
+    skipped: list[SkippedFile] = []
+    total_bytes = 0
+
+    for file, relative_path in zip(files, relative_paths):
+        # Stable path (not tempfile.mkdtemp()) is required for upsert
+        # idempotency — Embedder.generate_id() derives chunk IDs from the
+        # full path a loader was given, so the same relative_path must
+        # always land at the same saved_path on re-upload.
+        sanitized = _sanitize_relative_path(relative_path)
+        if sanitized is None:
+            skipped.append(SkippedFile(filename=relative_path, reason="Invalid or unsafe path"))
+            continue
+
+        extension = os.path.splitext(sanitized)[1].lstrip(".").upper()
+        if extension not in supported_extensions:
+            skipped.append(SkippedFile(filename=relative_path, reason=f"Unsupported extension: .{extension.lower()}"))
+            continue
+
+        # Size check before writing bytes — read the SpooledTemporaryFile
+        # directly (sync def handler: UploadFile's async .read() can't be
+        # awaited here, and calling it unawaited would silently no-op).
+        file.file.seek(0, os.SEEK_END)
+        size = file.file.tell()
+        file.file.seek(0)
+        total_bytes += size
+        if total_bytes > max_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Upload batch exceeds the {settings.max_upload_size_mb}MB limit",
+            )
+
+        saved_path = os.path.join(settings.upload_dir, sanitized)
+        os.makedirs(os.path.dirname(saved_path) or settings.upload_dir, exist_ok=True)
+        with open(saved_path, "wb") as f:
+            f.write(file.file.read())
+        saved_paths.append(saved_path)
+
+    raw_documents = []
+    for path in saved_paths:
+        try:
+            raw_documents.extend(load_file(path))
+        except ValueError as e:
+            skipped.append(SkippedFile(filename=path, reason=str(e)))
+
+    if not raw_documents:
+        raise HTTPException(status_code=422, detail="No loadable documents found in this upload")
+
+    chunks = chunk_documents(raw_documents, strategy=strategy)
+    embedder.embed(chunks)
+
+    return UploadIngestResponse(
+        documents_ingested=len(raw_documents),
+        chunks_created=len(chunks),
+        strategy=strategy,
+        skipped=skipped,
     )
 
 

@@ -18,6 +18,9 @@ data/chroma/
 data/bm25_index.pkl
 data/bm25_texts.json
 
+# Uploaded files (POST /ingest/upload) — user-supplied, regenerable
+data/uploads/
+
 # Test / editor artifacts
 .pytest_cache/
 .mypy_cache/

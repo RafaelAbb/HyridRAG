@@ -38,10 +38,10 @@ class AskResponse(BaseModel):
 
 
 class IngestRequest(BaseModel):
-    # Server-side path (file or directory) — this is a local/portfolio tool,
-    # not a multi-tenant SaaS, so "point it at a path on disk" matches the
-    # CLI in main.py and avoids building multipart upload handling that
-    # nothing in the spec actually calls for.
+    # Server-side path (file or directory) — secondary/power-user flow for
+    # local testing (matches the CLI in main.py: point it at a path already
+    # on the machine running the server, no upload round trip). The primary
+    # UI-driven flow is POST /ingest/upload (see UploadIngestResponse below).
     path: str
     strategy: ChunkingStrategy = settings.default_chunk_strategy
 
@@ -50,6 +50,21 @@ class IngestResponse(BaseModel):
     documents_ingested: int
     chunks_created: int
     strategy: ChunkingStrategy
+
+
+class SkippedFile(BaseModel):
+    filename: str
+    reason: str
+
+
+class UploadIngestResponse(BaseModel):
+    # Kept distinct from IngestResponse (not a shared/extended base) — a
+    # partial-failure "skipped" list is meaningless for the path-based
+    # /ingest, where a bad path is a hard 404/422, not a partial batch.
+    documents_ingested: int
+    chunks_created: int
+    strategy: ChunkingStrategy
+    skipped: list[SkippedFile] = []
 
 
 class DocumentsResponse(BaseModel):

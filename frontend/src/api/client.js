@@ -26,6 +26,28 @@ export async function ingestPath({ path, strategy }) {
   return request("/ingest", "POST", { path, strategy }); // strategy: "fixed" | "recursive" | "semantic"
 }
 
+// Bypasses request()'s JSON-only helper on purpose — request() exists so
+// every other caller gets "always JSON" for free, and there's exactly one
+// multipart caller in the app. Branching request() for this one case would
+// blur its contract for zero reuse benefit.
+export async function uploadFiles({ files, relativePaths, strategy, signal }) {
+  const formData = new FormData();
+  files.forEach((file) => formData.append("files", file));
+  relativePaths.forEach((p) => formData.append("relative_paths", p));
+  formData.append("strategy", strategy);
+
+  const res = await fetch(`${BASE_URL}/ingest/upload`, {
+    method: "POST",
+    // Do NOT set Content-Type here — the browser computes the multipart
+    // boundary itself; setting this header manually breaks the boundary
+    // parameter and the server can't parse the body at all.
+    body: formData,
+    signal,
+  });
+  if (!res.ok) throw await toApiError(res);
+  return res.json();
+}
+
 export async function fetchDocuments() {
   return request("/documents", "GET");
 }
