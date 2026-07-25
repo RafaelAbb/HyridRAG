@@ -27,20 +27,17 @@ import statistics
 from datetime import datetime, timezone
 from pathlib import Path
 
-import chromadb
 from openai import AsyncOpenAI, OpenAI
 
 # Must be imported before anything from `ragas` — see _compat.py for why.
 from evals.ragas import _compat  # noqa: F401
+from evals.ragas._shared import ingest, load_golden_dataset
 from ragas.embeddings import OpenAIEmbeddings as RagasOpenAIEmbeddings
 from ragas.llms.base import llm_factory
 from ragas.metrics.collections import AnswerRelevancy, ContextPrecision, ContextRecall, Faithfulness
 
 from src.config import settings
 from src.generation.generator import generate_answer
-from src.ingestion.chuncker import chunk_documents
-from src.ingestion.embedder import Embedder
-from src.ingestion.loader import load_directory
 from src.retrieval.fusion import Reranker, hybrid_retrieve
 
 CORPUS_DIR = Path(__file__).parent / "corpus"
@@ -50,30 +47,6 @@ COLLECTION_NAME = "rag_docs_ragas_eval"
 RESULTS_DIR = Path(__file__).parent.parent / "results"
 
 METRIC_NAMES = ["faithfulness", "answer_relevancy", "context_precision", "context_recall"]
-
-
-def ingest() -> chromadb.api.models.Collection.Collection:
-    client = chromadb.PersistentClient(path=str(CHROMA_PATH))
-    collection = client.get_or_create_collection(name=COLLECTION_NAME)
-
-    # Embedder.embed() upserts by a stable chunk id, so re-running this on an
-    # already-populated collection is a no-op, not a duplicate.
-    if collection.count() == 0:
-        raw_docs = load_directory(str(CORPUS_DIR))
-        chunks = chunk_documents(raw_docs)
-        openai_client = OpenAI(api_key=settings.openai_api_key)
-        Embedder(
-            chroma_client=client,
-            openai_client=openai_client,
-            collection_name=COLLECTION_NAME,
-        ).embed(chunks)
-
-    return collection
-
-
-def load_golden_dataset() -> list[dict]:
-    with open(GOLDEN_DATASET_PATH, encoding="utf-8") as f:
-        return json.load(f)
 
 
 async def score_one(
@@ -169,8 +142,8 @@ def main() -> None:
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     incremental_path = RESULTS_DIR / f"{timestamp}.jsonl"
 
-    collection = ingest()
-    golden = load_golden_dataset()
+    collection = ingest(CORPUS_DIR, CHROMA_PATH, COLLECTION_NAME)
+    golden = load_golden_dataset(GOLDEN_DATASET_PATH)
     print(f"Loaded {len(golden)} golden questions")
     print(f"Saving each question's result to {incremental_path} as it completes\n")
 
