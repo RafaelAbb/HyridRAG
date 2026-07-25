@@ -5,6 +5,7 @@
 .venv/
 venv/
 env/
+myenv/
 
 # Python cache
 __pycache__/
@@ -36,6 +37,9 @@ dist/
 # Eval run artifacts (regenerate by running the eval suite)
 evals/experiments/
 evals/logs/
+evals/chroma_eval/
+evals/ragas/chroma_stage0/
+evals/ragas/chroma_eval/
 
 exercises/
 
