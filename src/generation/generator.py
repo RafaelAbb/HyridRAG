@@ -82,7 +82,20 @@ def parse_response(response: str) -> GenerationResult:
         parsed = json.loads(response)
         
         answer = parsed.get("answer", "")
-        claim_source_pairs = parsed.get("claim_source_pairs", [])
+        raw_pairs = parsed.get("claim_source_pairs", [])
+
+        # claim_source_pairs comes straight from the model's JSON output, not
+        # our own code — SYSTEM_PROMPT asks for [claim, source_index] pairs,
+        # but the model occasionally emits a malformed entry (e.g. missing
+        # the source). Drop those instead of letting them crash
+        # calculated_confidence's `for _, src in pairs` unpack later.
+        claim_source_pairs = []
+        for pair in raw_pairs:
+            if isinstance(pair, (list, tuple)) and len(pair) == 2:
+                claim_source_pairs.append(tuple(pair))
+            else:
+                logging.warning(f"Dropping malformed claim_source_pair: {pair!r}")
+
         has_answer = parsed.get("has_answer", True)
 
         return GenerationResult(answer=answer, claim_source_pairs=claim_source_pairs, has_answer=has_answer)
