@@ -38,3 +38,7 @@ evals/experiments/
 evals/logs/
 
 exercises/
+
+# Superpowers worktrees
+.worktrees/
+.superpowers/
