@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     chroma_persist_dir: str = "./data/chroma"
     chroma_collection_name: str = "rag_docs"
 
+    # ChromaDB — evaluation only. Separate path so llm_eval tests never read or
+    # write the dev index; keeps eval results reproducible regardless of what's
+    # currently ingested in chroma_persist_dir.
+    chroma_eval_persist_dir: str = "./evals/chroma_eval"
+    chroma_eval_collection_name: str = "rag_docs_eval"
+
     # Retrieval
     dense_top_k: int = 10
     sparse_top_k: int = 10

@@ -115,8 +115,8 @@ demo video exists; the repo is public on GitHub with clean commit history.
 
 ## What "done" looks like for Lesson 6 — and the whole project
 
-* [ ] FastAPI service, typed models, correct status codes, startup-loaded index, `/docs` works
-* [ ] Dashboard with the hybrid-vs-dense toggle
+* [x] FastAPI service, typed models, correct status codes, startup-loaded index, `/docs` works
+* [x] Dashboard with the hybrid-vs-dense toggle
 * [ ] Dockerfile + compose + seed script — one-command spin-up
 * [ ] README leading with numbers + architecture diagram + design-decisions section
 * [ ] ≤4 min demo video
