@@ -25,7 +25,8 @@ shortcuts taken because "it's just an exercise."
 
 **Tech stack:** Python 3.12, OpenAI API, ChromaDB, rank-bm25, langchain-text-splitters,
 FastAPI, uvicorn, pydantic-settings, PyMuPDF, sentence-transformers, RAGAS, pytest,
-React 19 + Vite (frontend), Docker/docker-compose.
+React 19 + Vite (frontend), Docker/docker-compose, MCP Python SDK (`mcp[cli]`, pinned to
+1.29.0 — 2.0.0 restructured `FastMCP`'s API).
 
 **Repo:** https://github.com/RafaelAbb/HyridRAG — branch `main`.
 
@@ -67,6 +68,7 @@ React 19 + Vite (frontend), Docker/docker-compose.
 | Docker (backend + frontend + compose) | ✅ Done |
 | RAGAS eval harness + 30-question golden dataset | ✅ Done — see numbers below |
 | Portfolio-facing README with architecture + numbers | 🔄 this file's sibling, `README.md` |
+| MCP server (`retrieve` tool, raw retrieval, stdio) | ✅ Done — `src/mcp_server/server.py`, `/retrieve` route added alongside it |
 | Demo video (≤4 min) | ⬜ Not started |
 
 ### Latest eval numbers (`evals/results/20260728T195847Z.json`, 30 questions)
@@ -135,11 +137,14 @@ src/
 ├── generation/
 │   ├── base.py             ← GenerationResult, CitationVerification, JudgeEnum
 │   └── generator.py        ← generate_answer(), judge_citations() (LLM-as-judge)
-└── api/
-    ├── main.py              ← FastAPI() + lifespan (builds Embedder/Reranker once) + CORS + router include
-    ├── deps.py               ← get_embedder()/get_reranker() — thin app.state accessors for Depends()
-    ├── schemas.py             ← every request/response Pydantic model
-    └── routes.py               ← all endpoint handlers
+├── api/
+│   ├── main.py              ← FastAPI() + lifespan (builds Embedder/Reranker once) + CORS + router include
+│   ├── deps.py               ← get_embedder()/get_reranker() — thin app.state accessors for Depends()
+│   ├── schemas.py             ← every request/response Pydantic model
+│   └── routes.py               ← all endpoint handlers, incl. /retrieve (raw retrieval, no generation)
+└── mcp_server/
+    └── server.py            ← FastMCP server, `retrieve` tool, own Embedder/Reranker built in-process
+                                 (stdio subprocess — doesn't depend on the FastAPI app running)
 
 evals/
 ├── ragas/
@@ -190,6 +195,8 @@ pytest                              # unit tests (excludes llm_eval-marked tests
 python -m evals.ragas.run_eval      # full RAGAS eval run against the golden dataset
 
 docker compose up --build           # both services containerized
+
+mcp dev src/mcp_server/server.py    # MCP inspector — list/call the retrieve tool locally
 ```
 
 There's also a CLI at `main.py` (insert documents, view the index, ask questions)

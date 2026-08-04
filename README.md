@@ -87,12 +87,44 @@ go through the API, so it works even without the server running.
 
 Interactive API docs: `http://localhost:8000/docs` once the server's up.
 
+## MCP server
+
+`src/mcp_server/server.py` exposes the retrieval pipeline as an [MCP](https://modelcontextprotocol.io)
+tool — `retrieve(query, k, mode)` — for any MCP-aware host (Claude Desktop, Claude Code, a future
+agent project) to call directly, without going through `/ask`'s full answer-generation flow. It
+returns raw ranked chunks (`doc_id`, `text`, `score`, `source_name`), not a generated answer —
+built for a consumer that wants to reason over the material itself.
+
+It runs as its own stdio subprocess, independent of the FastAPI app — it builds its own
+`Embedder`/`Reranker` in-process at startup (same pattern as `main.py`'s CLI), so it works
+whether or not `uvicorn` is running.
+
+```bash
+# Local dev / inspector
+mcp dev src/mcp_server/server.py
+
+# Connect it to Claude Code (this repo, from the repo root)
+claude mcp add hyridrag-retrieval -- "<path-to-venv-python>" -m src.mcp_server.server
+
+# Or Claude Desktop — add to claude_desktop_config.json:
+#   "hyridrag-retrieval": {
+#     "command": "<path-to-venv-python>",
+#     "args": ["-m", "src.mcp_server.server"]
+#   }
+```
+
+The tool's docstring is the *only* documentation the calling model ever sees — it's written to
+be precise about what's returned (and what isn't: no page/section metadata, see
+`future/README.md`) rather than vague, since that's what determines whether the model calls it
+well.
+
 ## API surface
 
 | Endpoint | Method | Purpose |
 |---|---|---|
 | `/health` | GET | Liveness/readiness — 503 until startup (embedder + reranker) finishes |
 | `/ask` | POST | `{question, top_k, retrieval_mode}` → grounded answer + citations + confidence. `retrieval_mode` is `hybrid` (default) \| `dense` \| `sparse` |
+| `/retrieve` | POST | `{query, top_k, retrieval_mode}` → raw ranked chunks, no generation. Same pipeline as `/ask` up to the point it would hand off to the generator — the HTTP counterpart to the MCP `retrieve` tool below |
 | `/ingest` | POST | `{path, strategy}` — ingest a file/folder already on the server's filesystem. Power-user/local-testing escape hatch (see `future/README.md` re: hardening if ever exposed beyond localhost) |
 | `/ingest/upload` | POST | multipart: `files[]` + `relative_paths[]` + `strategy` — the primary UI-driven ingest flow, used by the dashboard's drag-and-drop |
 | `/documents` | GET | List indexed source names + total chunk count |
@@ -135,11 +167,13 @@ src/
 ├── generation/
 │   ├── base.py             ← GenerationResult, CitationVerification, JudgeEnum
 │   └── generator.py        ← generate_answer(), judge_citations() (LLM-as-judge)
-└── api/
-    ├── main.py              ← FastAPI() + lifespan (builds Embedder/Reranker once) + CORS + router include
-    ├── deps.py               ← get_embedder()/get_reranker() — thin app.state accessors for Depends()
-    ├── schemas.py             ← every request/response Pydantic model
-    └── routes.py               ← all endpoint handlers
+├── api/
+│   ├── main.py              ← FastAPI() + lifespan (builds Embedder/Reranker once) + CORS + router include
+│   ├── deps.py               ← get_embedder()/get_reranker() — thin app.state accessors for Depends()
+│   ├── schemas.py             ← every request/response Pydantic model
+│   └── routes.py               ← all endpoint handlers
+└── mcp_server/
+    └── server.py            ← FastMCP server, `retrieve` tool, own Embedder/Reranker, stdio transport
 
 frontend/                    ← React dashboard, see frontend/README.md
 future/                      ← backlog of deferred ideas/hardening/bugs — check before starting new work

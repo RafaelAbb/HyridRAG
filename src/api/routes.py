@@ -6,11 +6,14 @@ from src.api.deps import get_embedder, get_reranker
 from src.api.schemas import (
     AskRequest,
     AskResponse,
+    ChunkOut,
     DocumentsResponse,
     HealthResponse,
     IngestRequest,
     IngestResponse,
     RetrievalMode,
+    RetrieveRequest,
+    RetrieveResponse,
     SkippedFile,
     SourceOut,
     UploadIngestResponse,
@@ -24,6 +27,25 @@ from src.retrieval.fusion import Reranker, hybrid_retrieve
 from src.generation.generator import generate_answer
 
 router = APIRouter()
+
+
+def _retrieve_by_mode(
+    query: str,
+    mode: RetrievalMode,
+    embedder: Embedder,
+    reranker: Reranker,
+    k: int,
+):
+    """Shared dense/sparse/hybrid dispatch — used by both /ask (which goes on
+    to generate a prose answer) and /retrieve (which stops here and hands
+    the raw chunks back, e.g. to the MCP tool)."""
+    match mode:
+        case RetrievalMode.SPARSE:
+            return sparse_search(query, embedder.collection, k=k)
+        case RetrievalMode.DENSE:
+            return dense_search(query, embedder.collection, k=k)
+        case _:
+            return hybrid_retrieve(query, embedder.collection, reranker, k=k)
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -41,17 +63,10 @@ def ask(
     embedder: Embedder = Depends(get_embedder),
     reranker: Reranker = Depends(get_reranker),
 ):
-    
-    match payload.retrieval_mode:
-        case RetrievalMode.SPARSE:
-            retrieved = sparse_search(payload.question, embedder.collection, k=payload.top_k)
-        
-        case RetrievalMode.DENSE:
-            retrieved = dense_search(payload.question, embedder.collection, k=payload.top_k)
-            
-        case _:
-            retrieved = hybrid_retrieve(payload.question, embedder.collection, reranker, k=payload.top_k)
-    
+    retrieved = _retrieve_by_mode(
+        payload.question, payload.retrieval_mode, embedder, reranker, payload.top_k
+    )
+
     if not retrieved:
         # Nothing indexed yet is a valid state, not a server error — 200
         # with has_answer=False, same contract as an unanswerable question.
@@ -78,6 +93,34 @@ def ask(
         sources=sources,
         retrieval_mode=payload.retrieval_mode,
     )
+
+
+@router.post("/retrieve", response_model=RetrieveResponse)
+def retrieve(
+    payload: RetrieveRequest,
+    embedder: Embedder = Depends(get_embedder),
+    reranker: Reranker = Depends(get_reranker),
+):
+    """Raw retrieval, no generation — the material, not an opinion about it.
+    Same pipeline /ask uses up to the point it hands off to generate_answer();
+    this stops there. Exists for callers (the MCP tool, a future agent) that
+    want to do their own reasoning over the chunks instead of relaying a
+    pre-written answer."""
+    retrieved = _retrieve_by_mode(
+        payload.query, payload.retrieval_mode, embedder, reranker, payload.top_k
+    )
+
+    chunks = [
+        ChunkOut(
+            doc_id=r.doc_id,
+            text=r.text,
+            score=r.score,
+            source_name=r.metadata.source.source_name if r.metadata and r.metadata.source else "unknown",
+        )
+        for r in retrieved
+    ]
+
+    return RetrieveResponse(chunks=chunks, retrieval_mode=payload.retrieval_mode)
 
 
 @router.post("/ingest", response_model=IngestResponse)

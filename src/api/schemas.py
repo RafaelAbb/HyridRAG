@@ -29,6 +29,31 @@ class SourceOut(BaseModel):
     score: float
 
 
+class RetrieveRequest(BaseModel):
+    # Raw-retrieval counterpart to AskRequest — stops before generation.
+    # Same top_k bound as AskRequest: an unbounded k is a cost-control hole
+    # the moment a caller (human or model, via the MCP tool) asks for too much.
+    query: str = Field(min_length=1)
+    top_k: int = Field(default=settings.reranker_top_k, ge=1, le=50)
+    retrieval_mode: RetrievalMode = RetrievalMode.HYBRID
+
+
+class ChunkOut(BaseModel):
+    # What's actually available at retrieval time — see dense.py/sparse.py,
+    # metadata is flattened to source_name only (page/section/author are lost
+    # upstream in embedder.py, a known gap, see future/README.md). Don't
+    # promise fields here that the pipeline can't fill.
+    doc_id: str
+    text: str
+    score: float
+    source_name: str
+
+
+class RetrieveResponse(BaseModel):
+    chunks: list[ChunkOut]
+    retrieval_mode: RetrievalMode
+
+
 class AskResponse(BaseModel):
     answer: str
     has_answer: bool
