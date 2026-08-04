@@ -1,4 +1,4 @@
-"""MCP server exposing HyridRAG's hybrid retrieval pipeline as a tool.
+"""MCP server exposing HyridRAG's hybrid retrieval pipeline as MCP tools.
 
 Runs over stdio — the transport Claude Desktop/Code use for local servers,
 and the simplest one to get right first (see CLAUDE.md / this file's design
@@ -37,11 +37,11 @@ load_dotenv()
 
 from mcp.server.fastmcp import FastMCP
 
-from src.ingestion import Embedder
+from src.config import ChunkingStrategy, settings
+from src.ingestion import Embedder, chunk_documents, load_directory, load_file
 from src.retrieval.dense import dense_search
 from src.retrieval.fusion import Reranker, hybrid_retrieve
 from src.retrieval.sparse import sparse_search
-from src.config import settings
 
 mcp = FastMCP("hyridrag-retrieval")
 
@@ -105,6 +105,55 @@ def retrieve(query: str, k: int = settings.reranker_top_k, mode: str = "hybrid")
         }
         for r in results
     ]
+
+
+@mcp.tool()
+def ingest(path: str, strategy: str = settings.default_chunk_strategy.value) -> dict:
+    """Ingest a file or folder into the index so `retrieve` can find it.
+
+    `path` is resolved on the machine THIS SERVER runs on, not the caller's —
+    same as the API's POST /ingest (see src/api/routes.py), and the same
+    deliberate tradeoff: no path restriction, no auth, because this is a
+    single-user local tool. Don't wire this tool up to a host that isn't
+    trusted with arbitrary filesystem reads on this machine (see
+    future/README.md before ever exposing either beyond localhost).
+
+    Re-ingesting the same path is safe to call again — it upserts rather
+    than duplicating, because chunk IDs are derived from the file path
+    (see Embedder.generate_id() in src/ingestion/embedder.py).
+
+    Args:
+        path: Absolute path to a file or directory, already on this machine.
+        strategy: Chunking strategy — "fixed", "recursive", or "semantic".
+            Defaults to the server's configured default.
+
+    Returns:
+        On success: {"documents_ingested": int, "chunks_created": int,
+        "strategy": str}. On failure (bad path, unsupported/empty
+        directory, unknown strategy): {"error": str} — never raises, so a
+        bad call is something the calling model can see and react to.
+    """
+    if not os.path.exists(path):
+        return {"error": f"Path not found: {path}"}
+
+    try:
+        chunk_strategy = ChunkingStrategy(strategy)
+    except ValueError:
+        valid = ", ".join(s.value for s in ChunkingStrategy)
+        return {"error": f"Unknown strategy '{strategy}', expected one of: {valid}"}
+
+    raw_documents = load_directory(path) if os.path.isdir(path) else load_file(path)
+    if not raw_documents:
+        return {"error": "No loadable documents found at path"}
+
+    chunks = chunk_documents(raw_documents, strategy=chunk_strategy)
+    _embedder.embed(chunks)
+
+    return {
+        "documents_ingested": len(raw_documents),
+        "chunks_created": len(chunks),
+        "strategy": chunk_strategy.value,
+    }
 
 
 if __name__ == "__main__":

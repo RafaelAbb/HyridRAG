@@ -68,7 +68,7 @@ React 19 + Vite (frontend), Docker/docker-compose, MCP Python SDK (`mcp[cli]`, p
 | Docker (backend + frontend + compose) | ✅ Done |
 | RAGAS eval harness + 30-question golden dataset | ✅ Done — see numbers below |
 | Portfolio-facing README with architecture + numbers | 🔄 this file's sibling, `README.md` |
-| MCP server (`retrieve` tool, raw retrieval, stdio) | ✅ Done — `src/mcp_server/server.py`, `/retrieve` route added alongside it |
+| MCP server (`retrieve` + `ingest` tools, stdio) | ✅ Done — `src/mcp_server/server.py`, `/retrieve` route added alongside it |
 | Demo video (≤4 min) | ⬜ Not started |
 
 ### Latest eval numbers (`evals/results/20260728T195847Z.json`, 30 questions)
@@ -143,8 +143,8 @@ src/
 │   ├── schemas.py             ← every request/response Pydantic model
 │   └── routes.py               ← all endpoint handlers, incl. /retrieve (raw retrieval, no generation)
 └── mcp_server/
-    └── server.py            ← FastMCP server, `retrieve` tool, own Embedder/Reranker built in-process
-                                 (stdio subprocess — doesn't depend on the FastAPI app running)
+    └── server.py            ← FastMCP server, `retrieve` + `ingest` tools, own Embedder/Reranker
+                                 built in-process (stdio subprocess — doesn't depend on the FastAPI app running)
 
 evals/
 ├── ragas/

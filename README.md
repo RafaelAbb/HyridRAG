@@ -89,11 +89,15 @@ Interactive API docs: `http://localhost:8000/docs` once the server's up.
 
 ## MCP server
 
-`src/mcp_server/server.py` exposes the retrieval pipeline as an [MCP](https://modelcontextprotocol.io)
-tool — `retrieve(query, k, mode)` — for any MCP-aware host (Claude Desktop, Claude Code, a future
-agent project) to call directly, without going through `/ask`'s full answer-generation flow. It
-returns raw ranked chunks (`doc_id`, `text`, `score`, `source_name`), not a generated answer —
-built for a consumer that wants to reason over the material itself.
+`src/mcp_server/server.py` exposes the pipeline as two [MCP](https://modelcontextprotocol.io)
+tools for any MCP-aware host (Claude Desktop, Claude Code, a future agent project):
+
+- **`retrieve(query, k, mode)`** — raw ranked chunks (`doc_id`, `text`, `score`, `source_name`),
+  no generated answer. Bypasses `/ask`'s full answer-generation flow entirely, for a consumer
+  that wants to reason over the material itself.
+- **`ingest(path, strategy)`** — indexes a file/folder already on the machine the server runs
+  on. Same path-based, no-auth tradeoff as `POST /ingest` (see `future/README.md`); safe to call
+  repeatedly on the same path (upserts, doesn't duplicate).
 
 It runs as its own stdio subprocess, independent of the FastAPI app — it builds its own
 `Embedder`/`Reranker` in-process at startup (same pattern as `main.py`'s CLI), so it works
