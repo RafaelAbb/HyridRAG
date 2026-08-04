@@ -49,14 +49,13 @@ Each item: what it is, why it was deferred, and rough size if known.
   the build outright would catch a misconfigured deploy earlier — deferred pending a decision on
   actual deploy target (Vercel/Netlify/etc. env var workflow).
 
-## Project / lesson 6 checklist (not started)
+## Project checklist (not started)
 
-- Dockerfile + docker-compose (lesson 6.3) — containerize both services, seed script for a
-  one-command demo spin-up.
-- Project README leading with eval numbers + architecture diagram + design-decisions section
-  (lesson 6.4) — distinct from the dev-facing `README.md`/`frontend/README.md`, this is the
-  portfolio-facing one.
-- ≤4 min demo video (lesson 6.4).
+- Seed script for a one-command demo spin-up (Dockerfile + docker-compose are done; a script to
+  ingest sample docs on first `docker compose up` is not).
+- ≤4 min demo video.
+- Fix retrieval precision/recall — see the eval numbers and `evals/ragas/diagnose_precision.py`
+  in the root `README.md`. This is the main open item blocking calling the project "done."
 
 ## Environment gotchas worth remembering
 

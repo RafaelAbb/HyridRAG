@@ -1,13 +1,32 @@
-# Hybrid RAG System — Backend
+# Hybrid RAG System
 
-Production-style hybrid RAG (retrieval-augmented generation) pipeline: multi-format ingestion,
-dense (ChromaDB) + sparse (BM25) retrieval fused with RRF and a cross-encoder reranker, grounded
-generation with citation verification, and a FastAPI service in front of it. Built as a guided
-learning project — see `CLAUDE.md` for the teaching context and lesson plan if you're picking up
-where a prior session left off.
+Hybrid RAG (retrieval-augmented generation) service over internal documents: multi-format
+ingestion, dense (ChromaDB) + sparse (BM25) retrieval fused with RRF and a cross-encoder
+reranker, grounded generation with inline citations and LLM-as-judge verification, a FastAPI
+backend, a React dashboard, and a RAGAS evaluation harness — all Dockerized.
 
 This file is written for whoever (human or AI agent) opens this repo next and needs to get
-oriented fast.
+oriented fast. See `CLAUDE.md` for engineering context, conventions, and current status.
+
+## Eval results
+
+RAGAS scores on a 30-question hand-written golden dataset (never LLM-generated —
+see `evals/ragas/golden_dataset.json`), latest run `evals/results/20260728T195847Z.json`:
+
+| Metric | Score | |
+|---|---|---|
+| Faithfulness | **0.87** | generated claims are grounded in retrieved context |
+| Answer relevancy | **0.85** | answers actually address the question asked |
+| Context precision | **0.23** | ⚠️ retrieved context is often not the most relevant available |
+| Context recall | **0.42** | ⚠️ retrieval frequently misses relevant golden context entirely |
+
+Generation is solid; retrieval precision/recall is the known weak point and the active work
+item. `evals/ragas/diagnose_precision.py` does post-hoc failure analysis — for each flagged
+question it prints golden vs. actually-retrieved contexts side by side and resolves each
+snippet back to its source file, so "wrong file entirely" is distinguishable from "right file,
+wrong chunk" at a glance. See `future/README.md` before starting new retrieval work.
+
+Reproduce: `python -m evals.ragas.run_eval` (writes a new timestamped result to `evals/results/`).
 
 ## Architecture
 
@@ -39,6 +58,17 @@ Document (PDF / MD / HTML / TXT)
 ```
 
 ## Running it
+
+**Docker (both services, one command):**
+
+```bash
+cp .env.example .env   # fill in OPENAI_API_KEY at minimum
+docker compose up --build
+```
+
+Backend on `:8000`, frontend on `:5173`.
+
+**Locally:**
 
 ```bash
 pip install -r requirements.txt
@@ -114,7 +144,8 @@ src/
 frontend/                    ← React dashboard, see frontend/README.md
 future/                      ← backlog of deferred ideas/hardening/bugs — check before starting new work
 data/                        ← gitignored: data/chroma/ (vector index), data/uploads/ (ingested files)
-tests/                       ← pytest unit tests; tests/llm/ + tests/test_deepeval_eval.py make real LLM calls (marker: llm_eval, excluded by default)
+evals/                       ← RAGAS harness, golden dataset, diagnostic tools, timestamped results
+tests/                       ← pytest unit tests; llm_eval-marked tests make real LLM calls, excluded by default
 ```
 
 ## Key design decisions worth knowing before you change things
