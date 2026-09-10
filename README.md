@@ -19,13 +19,8 @@ results are reproducible without proprietary data:
 | Context precision | **0.23** | retrieved context is often not the most relevant available |
 | Context recall | **0.42** | retrieval frequently misses relevant golden context entirely |
 
-Generation is solid; retrieval precision/recall is the actively-diagnosed weak point.
-`evals/ragas/diagnose_precision.py` does the post-hoc failure analysis: for each flagged
-question it prints golden vs. actually-retrieved contexts side by side and resolves each
-snippet back to its source file, so "wrong file entirely" is distinguishable from "right
-file, wrong chunk" at a glance — that's the tool that produced the root-cause list in
-`future/README.md`. Next step is acting on that list (see the "Project checklist" section
-there) rather than tuning blind.
+Generation is solid; retrieval precision/recall is the known weak point, probably due to a
+weak eval dataset.
 
 Reproduce: `python -m evals.ragas.run_eval` (writes a new timestamped result to `evals/results/`).
 
@@ -77,13 +72,6 @@ cp .env.example .env   # fill in OPENAI_API_KEY at minimum
 uvicorn src.api.main:app --port 8000
 ```
 
-**Don't use `--reload` on Windows** — it's been observed serving a stale copy of the app
-after edits; restart manually instead.
-
-There's also a simple interactive CLI at `main.py` (insert documents, view the index, ask
-questions) that talks to the same `Embedder`/retrieval/generation modules directly — it does not
-go through the API, so it works even without the server running.
-
 Interactive API docs: `http://localhost:8000/docs` once the server's up.
 
 ## API surface
@@ -92,25 +80,21 @@ Interactive API docs: `http://localhost:8000/docs` once the server's up.
 |---|---|---|
 | `/health` | GET | Liveness/readiness — 503 until startup (embedder + reranker) finishes |
 | `/ask` | POST | `{question, top_k, retrieval_mode}` → grounded answer + citations + confidence. `retrieval_mode` is `hybrid` (default) \| `dense` \| `sparse` |
-| `/retrieve` | POST | `{query, top_k, retrieval_mode}` → raw ranked chunks, no generation. Same pipeline as `/ask` up to the point it would hand off to the generator |
-| `/ingest` | POST | `{path, strategy}` — ingest a file/folder already on the server's filesystem. Power-user/local-testing escape hatch (see `future/README.md` re: hardening if ever exposed beyond localhost) |
+| `/retrieve` | POST | `{query, top_k, retrieval_mode}` → raw ranked chunks, no generation |
+| `/ingest` | POST | `{path, strategy}` — ingest a file/folder already on the server's filesystem |
 | `/ingest/upload` | POST | multipart: `files[]` + `relative_paths[]` + `strategy` — the primary UI-driven ingest flow, used by the dashboard's drag-and-drop |
 | `/documents` | GET | List indexed source names + total chunk count |
 
-Both ingest endpoints share the same underlying pipeline (`load_file`/`chunk_documents`/
-`embedder.embed`) and the same idempotency guarantee: re-ingesting the same source (same path,
-or same `relative_path` on upload) **upserts**, it doesn't duplicate — because
-`Embedder.generate_id()` derives ChromaDB IDs from the file path. This is why `/ingest/upload`
-saves files to a *stable* path under `data/uploads/<relative_path>` rather than a random temp
-dir — see the comment at the save step in `src/api/routes.py`.
+Both ingest endpoints share the same underlying pipeline and the same idempotency guarantee:
+re-ingesting the same source **upserts**, it doesn't duplicate.
 
 ## Config
 
 All settings live in `src/config.py` (`pydantic-settings`, loaded from `.env` — see
-`.env.example` for the full list with descriptions). Config validates at import time: a missing
+`.env.example` for the full list). Config validates at import time: a missing
 `OPENAI_API_KEY` crashes loudly at startup, not silently mid-run.
 
-Notable ones if you're new to this codebase:
+Notable settings:
 - `default_chunk_strategy` — `fixed` \| `recursive` \| `semantic`
 - `cors_origins` — comma-separated, defaults to the Vite dev server's `localhost:5173`
 - `upload_dir` / `max_upload_size_mb` — for `/ingest/upload`
@@ -142,22 +126,12 @@ src/
     └── routes.py               ← all endpoint handlers
 
 frontend/                    ← React dashboard, see frontend/README.md
-future/                      ← backlog of deferred ideas/hardening/bugs — check before starting new work
+future/                      ← backlog of deferred ideas/hardening/bugs
 data/                        ← gitignored: data/chroma/ (vector index), data/uploads/ (ingested files)
 evals/                       ← RAGAS harness, golden dataset, diagnostic tools, timestamped results
 tests/                       ← pytest unit tests; llm_eval-marked tests make real LLM calls, excluded by default
 ```
 
-## Key design decisions worth knowing before you change things
+## License
 
-- **Idempotency via path-derived IDs.** `Embedder.generate_id()` builds ChromaDB upsert IDs from
-  the full file path a loader was given. Anything that changes how files land on disk (new
-  ingest path, new upload flow, etc.) must preserve stable, repeatable paths or re-ingestion will
-  silently duplicate instead of overwrite.
-- **Graceful degradation in retrieval.** `hybrid_retrieve()` falls back to plain RRF order if the
-  cross-encoder reranker throws — don't let a reranker failure take down `/ask` entirely.
-- **`/ask`'s citation contract.** `generate_answer()`'s prompt numbers retrieved chunks
-  `[1]`, `[2]`, ... (1-based, by position — not by `doc_id`). The frontend's citation-chip
-  rendering depends on this exact convention; see the comment in `frontend/src/api/client.js`.
-- **No authentication anywhere.** Deliberate for a single-user local/portfolio tool. Don't expose
-  this beyond localhost without addressing `future/README.md`'s backend security items first.
+MIT — see [LICENSE](LICENSE).
