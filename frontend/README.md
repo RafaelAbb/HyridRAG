@@ -78,10 +78,8 @@ src/
 - **No upload-progress bar, no per-panel error boundaries, no build-time env-var hard-fail** —
   all deliberate scope calls, documented with reasoning in `../future/README.md`.
 
-## Known environment constraint
+## Browser-specific behavior to double-check after changes
 
-Whoever developed the backend side of recent features did so on a machine with no Node.js
-installed and could not run `npm install`/`npm run dev` themselves — frontend changes from that
-context were reviewed statically (syntax, import resolution, prop-shape matching) but need a
-real browser pass, especially anything touching drag-and-drop/`webkitdirectory` (browser-specific
-behavior that can't be verified without an actual browser).
+Drag-and-drop / `webkitdirectory` handling in `IngestForm.jsx` is inherently
+browser-specific — verify it in an actual browser after touching that code, not just
+by reading the diff.
