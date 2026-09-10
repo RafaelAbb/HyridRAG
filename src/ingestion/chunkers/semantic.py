@@ -4,12 +4,12 @@ from typing import Iterator
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-from src.ingestion.base import ChunckerInterface, Chunk, ChunkingStrategy
+from src.ingestion.base import ChunkerInterface, Chunk, ChunkingStrategy
 
 TRANSOFRMER_MODEL = "all-MiniLM-L6-v2"
 THRESHOLD_PERCENTILE = 25  # Adjust this value based on your needs
 
-class SemanticChuncker(ChunckerInterface):
+class SemanticChunker(ChunkerInterface):
     
     def __init__(self, model_name=TRANSOFRMER_MODEL):
         super().__init__()

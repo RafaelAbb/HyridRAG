@@ -14,6 +14,9 @@ def sparse_search(query: str, collection: Collection, k: int) -> list[RetrievalR
     all_texts     = result["documents"]
     all_metadatas = result["metadatas"]
 
+    if not all_texts:
+        return []
+
     tokenized_corpus = [doc.lower().split() for doc in all_texts]
     tokenized_query  = query.lower().split()
 

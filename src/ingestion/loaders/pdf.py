@@ -7,7 +7,8 @@ from src.ingestion.utils import get_mod_time
 class PDFLoader(FileLoaderInterface):
     '''Class model for loading PDF files.'''
 
-    def load(self, file_path: str) -> list:  # TODO: Handle images in pdfs
+    # TODO: handle images in PDFs
+    def load(self, file_path: str) -> list:
         doc = pymupdf.open(file_path)
         mod_time = get_mod_time(file_path)
         raw_documents = []

@@ -3,10 +3,10 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from src.ingestion.base import RawDocument, DocumentMetadata, Chunk
-from src.ingestion.chuncker import ChunkingStrategy
-from src.ingestion.chunckers.fixed import FixedChuncker
-from src.ingestion.chunckers.recursive import RecursiveChuncker
-from src.ingestion.chunckers.semantic import SemanticChuncker
+from src.ingestion.chunker import ChunkingStrategy
+from src.ingestion.chunkers.fixed import FixedChunker
+from src.ingestion.chunkers.recursive import RecursiveChunker
+from src.ingestion.chunkers.semantic import SemanticChunker
 
 SHORT_TEXT = "Hello world. This is a test."
 
@@ -35,70 +35,70 @@ def make_doc(text: str) -> RawDocument:
 
 # ── Fixed ──────────────────────────────────────────────────────────────────────
 
-class TestFixedChuncker:
+class TestFixedChunker:
 
     def test_returns_chunks(self):
-        chunks = list(FixedChuncker(chunk_size=20, chunk_overlap=0).chunk(make_doc(LONG_TEXT)))
+        chunks = list(FixedChunker(chunk_size=20, chunk_overlap=0).chunk(make_doc(LONG_TEXT)))
         assert len(chunks) > 0
 
     def test_chunk_type(self):
-        chunks = list(FixedChuncker(chunk_size=20, chunk_overlap=0).chunk(make_doc(LONG_TEXT)))
+        chunks = list(FixedChunker(chunk_size=20, chunk_overlap=0).chunk(make_doc(LONG_TEXT)))
         assert all(isinstance(c, Chunk) for c in chunks)
 
     def test_strategy_tag(self):
-        chunks = list(FixedChuncker(chunk_size=20, chunk_overlap=0).chunk(make_doc(LONG_TEXT)))
+        chunks = list(FixedChunker(chunk_size=20, chunk_overlap=0).chunk(make_doc(LONG_TEXT)))
         assert all(c.chunk_strategy == ChunkingStrategy.FIXED for c in chunks)
 
     def test_chunk_size_respected(self):
-        chunks = list(FixedChuncker(chunk_size=20, chunk_overlap=0).chunk(make_doc(LONG_TEXT)))
+        chunks = list(FixedChunker(chunk_size=20, chunk_overlap=0).chunk(make_doc(LONG_TEXT)))
         # all chunks except possibly the last must be <= chunk_size
         assert all(len(c.content) <= 20 for c in chunks)
 
     def test_overlap_produces_more_chunks(self):
-        no_overlap = list(FixedChuncker(chunk_size=50, chunk_overlap=0).chunk(make_doc(LONG_TEXT)))
-        with_overlap = list(FixedChuncker(chunk_size=50, chunk_overlap=25).chunk(make_doc(LONG_TEXT)))
+        no_overlap = list(FixedChunker(chunk_size=50, chunk_overlap=0).chunk(make_doc(LONG_TEXT)))
+        with_overlap = list(FixedChunker(chunk_size=50, chunk_overlap=25).chunk(make_doc(LONG_TEXT)))
         assert len(with_overlap) > len(no_overlap)
 
     def test_short_text_single_chunk(self):
-        chunks = list(FixedChuncker(chunk_size=200, chunk_overlap=0).chunk(make_doc(SHORT_TEXT)))
+        chunks = list(FixedChunker(chunk_size=200, chunk_overlap=0).chunk(make_doc(SHORT_TEXT)))
         assert len(chunks) == 1
         assert chunks[0].content == SHORT_TEXT
 
     def test_metadata_preserved(self):
         meta = DocumentMetadata()
         doc = RawDocument(content=LONG_TEXT, metadata=meta)
-        chunks = list(FixedChuncker(chunk_size=50, chunk_overlap=0).chunk(doc))
+        chunks = list(FixedChunker(chunk_size=50, chunk_overlap=0).chunk(doc))
         assert all(c.metadata is meta for c in chunks)
 
     def test_empty_content(self):
-        chunks = list(FixedChuncker().chunk(make_doc("")))
+        chunks = list(FixedChunker().chunk(make_doc("")))
         assert chunks == []
 
 
 # ── Recursive ─────────────────────────────────────────────────────────────────
 
-class TestRecursiveChuncker:
+class TestRecursiveChunker:
 
     def test_returns_chunks(self):
-        chunks = list(RecursiveChuncker().chunk(make_doc(LONG_TEXT)))
+        chunks = list(RecursiveChunker().chunk(make_doc(LONG_TEXT)))
         assert len(chunks) > 0
 
     def test_chunk_type(self):
-        chunks = list(RecursiveChuncker().chunk(make_doc(LONG_TEXT)))
+        chunks = list(RecursiveChunker().chunk(make_doc(LONG_TEXT)))
         assert all(isinstance(c, Chunk) for c in chunks)
 
     def test_strategy_tag(self):
-        chunks = list(RecursiveChuncker().chunk(make_doc(LONG_TEXT)))
+        chunks = list(RecursiveChunker().chunk(make_doc(LONG_TEXT)))
         assert all(c.chunk_strategy == ChunkingStrategy.RECURSIVE for c in chunks)
 
     def test_chunk_ids_sequential(self):
-        chunks = list(RecursiveChuncker().chunk(make_doc(LONG_TEXT)))
+        chunks = list(RecursiveChunker().chunk(make_doc(LONG_TEXT)))
         ids = [c.chunk_id for c in chunks]
         assert ids == list(range(len(chunks)))
 
     def test_content_coverage(self):
         # all words from original should appear somewhere in the chunks
-        chunks = list(RecursiveChuncker().chunk(make_doc(LONG_TEXT)))
+        chunks = list(RecursiveChunker().chunk(make_doc(LONG_TEXT)))
         combined = " ".join(c.content for c in chunks)
         for word in LONG_TEXT.split():
             assert word in combined
@@ -106,7 +106,7 @@ class TestRecursiveChuncker:
     def test_metadata_preserved(self):
         meta = DocumentMetadata()
         doc = RawDocument(content=LONG_TEXT, metadata=meta)
-        chunks = list(RecursiveChuncker().chunk(doc))
+        chunks = list(RecursiveChunker().chunk(doc))
         assert all(c.metadata is meta for c in chunks)
 
 
@@ -125,37 +125,37 @@ def make_fake_encode(n_sentences):
 
 @pytest.fixture(scope="module")
 def mock_sentence_transformer():
-    with patch("src.ingestion.chunckers.semantic.SentenceTransformer") as mock_cls:
+    with patch("src.ingestion.chunkers.semantic.SentenceTransformer") as mock_cls:
         mock_model = MagicMock()
         mock_model.encode.side_effect = make_fake_encode(6)
         mock_cls.return_value = mock_model
         yield mock_cls, mock_model
 
 
-class TestSemanticChuncker:
+class TestSemanticChunker:
 
     def test_returns_chunks(self, mock_sentence_transformer):
         _, mock_model = mock_sentence_transformer
         mock_model.encode.side_effect = make_fake_encode(6)
-        chunks = list(SemanticChuncker().chunk(make_doc(SEMANTIC_TEXT)))
+        chunks = list(SemanticChunker().chunk(make_doc(SEMANTIC_TEXT)))
         assert len(chunks) > 0
 
     def test_chunk_type(self, mock_sentence_transformer):
         _, mock_model = mock_sentence_transformer
         mock_model.encode.side_effect = make_fake_encode(6)
-        chunks = list(SemanticChuncker().chunk(make_doc(SEMANTIC_TEXT)))
+        chunks = list(SemanticChunker().chunk(make_doc(SEMANTIC_TEXT)))
         assert all(isinstance(c, Chunk) for c in chunks)
 
     def test_strategy_tag(self, mock_sentence_transformer):
         _, mock_model = mock_sentence_transformer
         mock_model.encode.side_effect = make_fake_encode(6)
-        chunks = list(SemanticChuncker().chunk(make_doc(SEMANTIC_TEXT)))
+        chunks = list(SemanticChunker().chunk(make_doc(SEMANTIC_TEXT)))
         assert all(c.chunk_strategy == ChunkingStrategy.SEMANTIC for c in chunks)
 
     def test_chunk_ids_sequential(self, mock_sentence_transformer):
         _, mock_model = mock_sentence_transformer
         mock_model.encode.side_effect = make_fake_encode(6)
-        chunks = list(SemanticChuncker().chunk(make_doc(SEMANTIC_TEXT)))
+        chunks = list(SemanticChunker().chunk(make_doc(SEMANTIC_TEXT)))
         ids = [c.chunk_id for c in chunks]
         assert ids == list(range(len(chunks)))
 
@@ -163,19 +163,19 @@ class TestSemanticChuncker:
         # first half embeddings [1,0], second half [0,1] → cosine sim drops at midpoint
         _, mock_model = mock_sentence_transformer
         mock_model.encode.side_effect = make_fake_encode(6)
-        chunks = list(SemanticChuncker().chunk(make_doc(SEMANTIC_TEXT)))
+        chunks = list(SemanticChunker().chunk(make_doc(SEMANTIC_TEXT)))
         assert len(chunks) >= 2
 
     def test_model_loaded_once(self, mock_sentence_transformer):
         mock_cls, _ = mock_sentence_transformer
-        SemanticChuncker()
+        SemanticChunker()
         assert mock_cls.called
-        assert hasattr(SemanticChuncker.__init__, "__wrapped__") or True  # model stored on self
+        assert hasattr(SemanticChunker.__init__, "__wrapped__") or True  # model stored on self
 
     def test_metadata_preserved(self, mock_sentence_transformer):
         _, mock_model = mock_sentence_transformer
         mock_model.encode.side_effect = make_fake_encode(6)
         meta = DocumentMetadata()
         doc = RawDocument(content=SEMANTIC_TEXT, metadata=meta)
-        chunks = list(SemanticChuncker().chunk(doc))
+        chunks = list(SemanticChunker().chunk(doc))
         assert all(c.metadata is meta for c in chunks)

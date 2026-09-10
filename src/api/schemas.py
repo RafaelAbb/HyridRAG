@@ -64,9 +64,9 @@ class AskResponse(BaseModel):
 
 class IngestRequest(BaseModel):
     # Server-side path (file or directory) — secondary/power-user flow for
-    # local testing (matches the CLI in main.py: point it at a path already
-    # on the machine running the server, no upload round trip). The primary
-    # UI-driven flow is POST /ingest/upload (see UploadIngestResponse below).
+    # local testing: point it at a path already on the machine running the
+    # server, no upload round trip. The primary UI-driven flow is
+    # POST /ingest/upload (see UploadIngestResponse below).
     path: str
     strategy: ChunkingStrategy = settings.default_chunk_strategy
 

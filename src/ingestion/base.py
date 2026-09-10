@@ -14,7 +14,7 @@ class FileLoaderInterface(ABC):
         pass
 
 
-class ChunckerInterface(ABC):
+class ChunkerInterface(ABC):
     '''interface for file chunkers.'''
 
     @abstractmethod

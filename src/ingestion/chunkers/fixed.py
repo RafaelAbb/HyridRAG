@@ -1,12 +1,12 @@
 from typing import Iterator
 
-from src.ingestion.base import ChunckerInterface, Chunk, ChunkingStrategy, RawDocument
+from src.ingestion.base import ChunkerInterface, Chunk, ChunkingStrategy, RawDocument
 
 
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 64
 
-class FixedChuncker(ChunckerInterface):
+class FixedChunker(ChunkerInterface):
     def __init__(self, chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHUNK_OVERLAP):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
