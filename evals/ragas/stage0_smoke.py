@@ -9,6 +9,10 @@ Nothing here is the "real" eval yet — the 5-page sample corpus, a single quest
 pulled from the golden set, one metric. The only goal is confirming every piece of
 the chain talks to the next one correctly, cheaply, before trusting the full
 Stage 2 run in run_eval.py.
+
+`corpus_sample/` (used here) is a small subset of `corpus/` (used by the full
+`run_eval.py` run) — same source docs, just fewer of them, kept only for this
+cheap smoke test.
 """
 
 import asyncio

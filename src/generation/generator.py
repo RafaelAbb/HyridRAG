@@ -101,7 +101,8 @@ def parse_response(response: str) -> GenerationResult:
         return GenerationResult(answer=answer, claim_source_pairs=claim_source_pairs, has_answer=has_answer)
     except json.JSONDecodeError:
         # Handle cases where the response is not valid JSON
-        return GenerationResult(answer="", claim_source_pairs=[], has_answer=False, confidence=0.0)#todo: send to another llm to only fix the json format and return the fixed json to this function
+        # TODO: send to another LLM to only fix the JSON format and return the fixed JSON to this function
+        return GenerationResult(answer="", claim_source_pairs=[], has_answer=False, confidence=0.0)
 
 
 def generate_answer(query: str, 
