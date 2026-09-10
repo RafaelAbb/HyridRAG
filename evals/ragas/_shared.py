@@ -12,7 +12,7 @@ import chromadb
 from openai import OpenAI
 
 from src.config import settings
-from src.ingestion.chuncker import chunk_documents
+from src.ingestion.chunker import chunk_documents
 from src.ingestion.embedder import Embedder
 from src.ingestion.loader import load_directory
 

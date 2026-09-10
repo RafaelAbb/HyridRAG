@@ -2,12 +2,12 @@ from typing import Iterator
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from src.ingestion.base import ChunckerInterface, Chunk, ChunkingStrategy
+from src.ingestion.base import ChunkerInterface, Chunk, ChunkingStrategy
 
 CHUNK_SIZE = 100
 CHUNK_OVERLAP = 0
 
-class RecursiveChuncker(ChunckerInterface):
+class RecursiveChunker(ChunkerInterface):
     
     
     def chunk(self, raw_document,
